@@ -34,6 +34,10 @@ yarn-error.log*
 .env*
 !.env.example
 
+# local credential files (e.g. GCP service account keys) — never commit these,
+# this app exists partly to stop repeating the old repo's plaintext-secrets mistake
+/config/
+
 # vercel
 .vercel
 

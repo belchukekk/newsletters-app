@@ -8,8 +8,12 @@ export default async function NewsletterEditorPage() {
   const newsletters = await getAdminNewsletters();
 
   return (
-    <main>
+    <main className="page">
       <h1>Nyhedsbreve</h1>
+      <p className="page-intro">
+        Træk i håndtaget for at ændre rækkefølgen. Hver ændring gemmes for sig, når du klikker
+        Gem på det enkelte nyhedsbrev.
+      </p>
       <NewsletterEditorList initialNewsletters={newsletters} />
     </main>
   );

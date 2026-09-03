@@ -17,14 +17,14 @@ export default async function ConfirmSubscriptionPage(
 
   if (!id || !chk) {
     return (
-      <main>
+      <main className="page page--narrow">
         <p>Mangler parametre.</p>
       </main>
     );
   }
 
   return (
-    <main>
+    <main className="page page--narrow">
       <ConfirmSubscription id={id} chk={chk} />
     </main>
   );

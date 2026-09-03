@@ -24,62 +24,79 @@ export default async function AdminDashboardPage(props: PageProps<"/admin">) {
   const subscriptionById = new Map(subscriptions.map((row) => [row.id, row]));
 
   return (
-    <main>
+    <main className="page">
       <h1>Admin</h1>
-      <p>{email}</p>
+      <p className="page-intro">{email}</p>
 
       <BlacklistToggle blacklistSource={blacklistSource} />
 
-      <nav>
-        <Link href="/admin/newsletter-editor">Nyhedsbrev-redaktør</Link>{" "}
-        <Link href="/admin/gdpr">GDPR</Link>{" "}
-        <Link href={showEvents ? "/admin" : "/admin?events=1"}>
-          {showEvents ? "Skjul events" : "Vis events"}
-        </Link>
-      </nav>
+      <div className="section">
+        <div className="page-nav">
+          <Link href={showEvents ? "/admin" : "/admin?events=1"}>
+            {showEvents ? "Skjul events" : "Vis events"}
+          </Link>
+        </div>
 
-      <h2>Nyhedsbreve</h2>
-      <ul>
-        {newsletters.map((newsletter) => {
-          const subscription = subscriptionById.get(newsletter.id);
-          return (
-            <li key={newsletter.id}>
-              {newsletter.title} — {newsletter.published ? "udgivet" : "ikke udgivet"} —{" "}
-              {subscription?.status === 1 ? "tilmeldt" : "ikke tilmeldt"}
-              {subscription?.cacheEvent && <em> (cache: {subscription.cacheEvent})</em>}
-            </li>
-          );
-        })}
-      </ul>
+        <h2>Nyhedsbreve</h2>
+        <ul>
+          {newsletters.map((newsletter) => {
+            const subscription = subscriptionById.get(newsletter.id);
+            return (
+              <li key={newsletter.id} className="admin-newsletter-row">
+                <span>{newsletter.title}</span>
+                <span className="admin-newsletter-row__badges">
+                  <span className={`badge ${newsletter.published ? "badge--positive" : ""}`}>
+                    {newsletter.published ? "Udgivet" : "Ikke udgivet"}
+                  </span>
+                  <span className={`badge ${subscription?.status === 1 ? "badge--positive" : ""}`}>
+                    {subscription?.status === 1 ? "Tilmeldt" : "Ikke tilmeldt"}
+                  </span>
+                  {subscription?.cacheEvent && (
+                    <span className="badge badge--neutral">cache: {subscription.cacheEvent}</span>
+                  )}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
 
       {events && (
-        <>
+        <div className="section">
           <h2>Events</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Dato</th>
-                <th>Liste</th>
-                <th>Kampagne</th>
-                <th>Event</th>
-              </tr>
-            </thead>
-            <tbody>
-              {events.map((event, index) => (
-                <tr key={index}>
-                  <td>{event.timestamp}</td>
-                  <td>{String(event.list ?? "")}</td>
-                  <td>
-                    <a href={event.url} target="_blank" rel="noreferrer">
-                      {String(event.campaignName ?? "")}
-                    </a>
-                  </td>
-                  <td>{event.eventType}</td>
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Dato</th>
+                  <th>Liste</th>
+                  <th>Kampagne</th>
+                  <th>Event</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </>
+              </thead>
+              <tbody>
+                {events.map((event, index) => (
+                  <tr key={index}>
+                    <td>{event.timestamp}</td>
+                    <td>{String(event.list ?? "")}</td>
+                    <td>
+                      <a href={event.url} target="_blank" rel="noreferrer">
+                        {String(event.campaignName ?? "")}
+                      </a>
+                    </td>
+                    <td>
+                      <span
+                        className={`badge ${event.eventType === "opened" ? "badge--positive" : ""}`}
+                      >
+                        {event.eventType}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
     </main>
   );

@@ -1,4 +1,4 @@
-import { createDecipheriv } from "crypto";
+import { createCipheriv, createDecipheriv } from "crypto";
 
 // Decrypts the "Infosoft" subscriber id shared with ActiveCampaign — port of
 // EAvis.php's openssl_decrypt(..., AES-256-CBC, ..., 0, ...) call.
@@ -28,6 +28,26 @@ export function decryptInfosoftId(hash: string): string | null {
     ]).toString("utf8");
 
     return /^\d+$/.test(decrypted) ? decrypted : null;
+  } catch {
+    return null;
+  }
+}
+
+// Port of EAvis::getHashFromInfosoftId — the encrypt counterpart, used by
+// /send-sms to regenerate a subscription hash when the request didn't
+// already carry one. Legacy urlencode()s the result; that's a
+// URL-construction concern, left to the caller (encodeURIComponent) rather
+// than baked into this function.
+export function encryptInfosoftId(infosoftId: string): string | null {
+  const rawKey = process.env.NL_AC_ENC_KEY;
+  const rawIv = process.env.NL_AC_ENC_IV;
+  if (!rawKey || !rawIv) return null;
+
+  try {
+    const key = toAes256Key(rawKey);
+    const iv = Buffer.from(rawIv, "utf8");
+    const cipher = createCipheriv("aes-256-cbc", key, iv);
+    return Buffer.concat([cipher.update(infosoftId, "utf8"), cipher.final()]).toString("base64");
   } catch {
     return null;
   }

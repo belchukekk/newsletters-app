@@ -25,15 +25,17 @@ export default async function GdprDeletePage(props: PageProps<"/admin/gdpr/delet
   ]);
 
   return (
-    <main>
+    <main className="page">
       <h1>Slet mine data</h1>
       {deleteRequested ? (
-        <p>Sletteanmodning modtaget for denne email. Sletning udføres ved midnat.</p>
+        <p className="notice notice--info">
+          Sletteanmodning modtaget for denne email. Sletning udføres ved midnat.
+        </p>
       ) : (
         <>
           <GdprEventsTable events={events} />
           <form action="/admin/gdpr/delete" method="get">
-            <button type="submit" name="gdpr_delete" value="1">
+            <button className="button button--secondary" type="submit" name="gdpr_delete" value="1">
               Anmod om sletning
             </button>
           </form>

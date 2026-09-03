@@ -29,7 +29,7 @@ export default async function SubscribePage(props: PageProps<"/subscribe">) {
   if (session) {
     const subscribedIds = await getUserSubscriptions(session.email);
     return (
-      <main>
+      <main className="page page--narrow">
         <h1>Tilmeld nyhedsbrev</h1>
         <SubscriptionToggleList
           newsletters={visibleNewsletters}
@@ -44,23 +44,37 @@ export default async function SubscribePage(props: PageProps<"/subscribe">) {
   const primaryNewsletter = visibleNewsletters[0];
 
   return (
-    <main>
+    <main className="page page--narrow">
       <h1>Tilmeld nyhedsbrev</h1>
       <form action="/save" method="post" id="form__subscribe">
         {visibleNewsletters.map((newsletter) => (
-          <label key={newsletter.id}>
-            <input type="checkbox" name="check-input" required />
-            {newsletter.permission}
-          </label>
+          <div className="form-field--checkbox" key={newsletter.id}>
+            <input type="checkbox" id={`check-${newsletter.id}`} name="check-input" required />
+            <label htmlFor={`check-${newsletter.id}`}>{newsletter.permission}</label>
+          </div>
         ))}
-        <input type="email" name="email" defaultValue={email} required />
+        <div className="form-field">
+          <label className="form-field__label" htmlFor="subscribe-email">
+            E-mail
+          </label>
+          <input
+            className="form-field__input"
+            id="subscribe-email"
+            type="email"
+            name="email"
+            defaultValue={email}
+            required
+          />
+        </div>
         <input type="hidden" name="env" value={env} />
         <input
           type="hidden"
           name="newsletter_id"
           value={primaryNewsletter?.id ?? ""}
         />
-        <button type="submit">Tilmeld</button>
+        <button className="button" type="submit">
+          Tilmeld
+        </button>
       </form>
     </main>
   );

@@ -27,12 +27,14 @@ export function ConfirmSubscription({ id, chk }: { id: string; chk: string }) {
   }, [id, chk]);
 
   if (state === "pending") return <p>Bekræfter…</p>;
-  if (state === "error") return <p role="alert">Linket er ugyldigt eller udløbet.</p>;
+  if (state === "error") {
+    return <p className="notice notice--error">Linket er ugyldigt eller udløbet.</p>;
+  }
 
   return (
     <div>
       <h1>Tilmelding bekræftet</h1>
-      <p>
+      <p className="notice notice--success">
         {newsletterTitle
           ? `Du er nu tilmeldt ${newsletterTitle}.`
           : "Din tilmelding er bekræftet."}

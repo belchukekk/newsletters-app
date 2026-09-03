@@ -5,10 +5,12 @@ import Link from "next/link";
 // here.
 export default function UnsubscribeFeedbackPage() {
   return (
-    <main>
+    <main className="page page--narrow">
       <h1>Tak for dit svar</h1>
       <p>Din tilbagemelding er modtaget.</p>
-      <Link href="/manage">Til mine nyhedsbreve</Link>
+      <Link className="button" href="/manage">
+        Til mine nyhedsbreve
+      </Link>
     </main>
   );
 }

@@ -24,7 +24,7 @@ export default async function UnsubscribePage(props: PageProps<"/unsubscribe">) 
 
   if (!id) {
     return (
-      <main>
+      <main className="page page--narrow">
         <p>id:missing parameter</p>
       </main>
     );
@@ -35,8 +35,8 @@ export default async function UnsubscribePage(props: PageProps<"/unsubscribe">) 
 
   if (matches.length !== 1) {
     return (
-      <main>
-        <p>Du er nu afmeldt nyhedsbrevet.</p>
+      <main className="page page--narrow">
+        <p className="notice notice--success">Du er nu afmeldt nyhedsbrevet.</p>
       </main>
     );
   }
@@ -45,55 +45,82 @@ export default async function UnsubscribePage(props: PageProps<"/unsubscribe">) 
   const newsletter = matches[0];
 
   return (
-    <main>
+    <main className="page page--narrow">
       <h1>Du er nu afmeldt {newsletter.title}</h1>
-      <p>Fortæl os gerne hvorfor:</p>
+      <p className="page-intro">Fortæl os gerne hvorfor:</p>
 
       <form action={submitUnsubscribeFeedback}>
         <input type="hidden" name="newsletter_id" value={id} />
 
-        <label>
-          <input type="checkbox" name="reason" value="pause" />
-          Sæt nyhedsbrevet på pause i stedet
-        </label>
+        <div className="form-field--checkbox">
+          <input type="checkbox" id="reason-pause" name="reason" value="pause" />
+          <label htmlFor="reason-pause">Sæt nyhedsbrevet på pause i stedet</label>
+        </div>
         <fieldset>
           <legend>Pause-periode</legend>
           {PAUSE_PERIODS.map((weeks, index) => (
-            <label key={weeks}>
+            <div className="form-field--checkbox" key={weeks}>
               <input
                 type="radio"
+                id={`pause-${weeks}`}
                 name="pause_period"
                 value={weeks}
                 defaultChecked={index === 0}
               />
-              {weeks} {weeks === 1 ? "uge" : "uger"}
-            </label>
+              <label htmlFor={`pause-${weeks}`}>
+                {weeks} {weeks === 1 ? "uge" : "uger"}
+              </label>
+            </div>
           ))}
-          <label>
-            <input type="radio" name="pause_period" value={0} />
-            Permanent pause
-          </label>
+          <div className="form-field--checkbox">
+            <input type="radio" id="pause-permanent" name="pause_period" value={0} />
+            <label htmlFor="pause-permanent">Permanent pause</label>
+          </div>
         </fieldset>
 
-        <label>
-          <input type="checkbox" name="reason" value="Jeg har ikke tilmeldt mig nyhedsbrevet" />
-          Jeg har ikke tilmeldt mig nyhedsbrevet
-        </label>
-        <label>
-          <input type="checkbox" name="reason" value="Nyhedsbrevet interesserer mig ikke" />
-          Nyhedsbrevet interesserer mig ikke
-        </label>
-        <label>
-          <input type="checkbox" name="reason" value="Nyhedsbrevet kommer for ofte" />
-          Nyhedsbrevet kommer for ofte
-        </label>
-        <label>
-          <input type="checkbox" name="reason" value={OTHER_REASON_VALUE} />
-          Andet
-          <input type="text" name="reason-other_content" placeholder="Uddyb gerne" />
-        </label>
+        <div className="form-field--checkbox">
+          <input
+            type="checkbox"
+            id="reason-not-signed-up"
+            name="reason"
+            value="Jeg har ikke tilmeldt mig nyhedsbrevet"
+          />
+          <label htmlFor="reason-not-signed-up">Jeg har ikke tilmeldt mig nyhedsbrevet</label>
+        </div>
+        <div className="form-field--checkbox">
+          <input
+            type="checkbox"
+            id="reason-not-interested"
+            name="reason"
+            value="Nyhedsbrevet interesserer mig ikke"
+          />
+          <label htmlFor="reason-not-interested">Nyhedsbrevet interesserer mig ikke</label>
+        </div>
+        <div className="form-field--checkbox">
+          <input
+            type="checkbox"
+            id="reason-too-often"
+            name="reason"
+            value="Nyhedsbrevet kommer for ofte"
+          />
+          <label htmlFor="reason-too-often">Nyhedsbrevet kommer for ofte</label>
+        </div>
+        <div className="form-field--checkbox">
+          <input type="checkbox" id="reason-other" name="reason" value={OTHER_REASON_VALUE} />
+          <label htmlFor="reason-other">Andet</label>
+        </div>
+        <div className="form-field">
+          <input
+            className="form-field__input"
+            type="text"
+            name="reason-other_content"
+            placeholder="Uddyb gerne"
+          />
+        </div>
 
-        <button type="submit">Send</button>
+        <button className="button" type="submit">
+          Send
+        </button>
       </form>
     </main>
   );

@@ -16,9 +16,11 @@ export default async function ManagePage() {
   ]);
 
   return (
-    <main>
+    <main className="page page--narrow">
       {session.originLink && (
-        <a href={session.originLink}>« {session.originLabel}</a>
+        <a className="back-link" href={session.originLink}>
+          « {session.originLabel}
+        </a>
       )}
       <h1>Mine nyhedsbreve</h1>
       <SubscriptionToggleList newsletters={newsletters} subscribedIds={subscribedIds} />

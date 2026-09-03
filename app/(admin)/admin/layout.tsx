@@ -12,22 +12,27 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
 
   return (
     <div>
-      <header>
-        <nav>
+      <div className="admin-bar">
+        <nav className="admin-bar__nav">
           <Link href="/admin">Admin</Link>
           <Link href="/admin/newsletter-editor">Nyhedsbreve</Link>
+          <Link href="/admin/gdpr">GDPR</Link>
         </nav>
-        <span>{session.user.email}</span>
-        <form
-          action={async () => {
-            "use server";
-            await signOut();
-          }}
-        >
-          <button type="submit">Log ud</button>
-        </form>
-      </header>
-      <main>{children}</main>
+        <div className="admin-bar__account">
+          <span className="admin-bar__email">{session.user.email}</span>
+          <form
+            action={async () => {
+              "use server";
+              await signOut();
+            }}
+          >
+            <button className="admin-bar__signout" type="submit">
+              Log ud
+            </button>
+          </form>
+        </div>
+      </div>
+      {children}
     </div>
   );
 }

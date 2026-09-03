@@ -60,7 +60,7 @@ export function NewsletterEditorList({
 
   return (
     <div>
-      {reorderError && <p role="alert">{reorderError}</p>}
+      {reorderError && <p className="notice notice--error">{reorderError}</p>}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -70,14 +70,14 @@ export function NewsletterEditorList({
           items={newsletters.map((n) => n.id)}
           strategy={verticalListSortingStrategy}
         >
-          <ul>
+          <ul className="editor-list">
             {newsletters.map((newsletter) => (
               <NewsletterCard key={newsletter.id} newsletter={newsletter} />
             ))}
           </ul>
         </SortableContext>
       </DndContext>
-      {isReordering && <p>Gemmer rækkefølge…</p>}
+      {isReordering && <p className="editor-list__status">Gemmer rækkefølge…</p>}
     </div>
   );
 }

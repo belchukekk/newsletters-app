@@ -50,20 +50,24 @@ export function SubscriptionToggleList({
 
   return (
     <div>
-      {error && <p role="alert">{error}</p>}
+      {error && <p className="notice notice--error">{error}</p>}
       <ul>
         {newsletters.map((newsletter) => (
-          <li key={newsletter.id}>
-            <label>
+          <li key={newsletter.id} className="toggle-row">
+            <div className="toggle-row__text">
+              <p className="toggle-row__title">{newsletter.title}</p>
+              <p className="toggle-row__description">{newsletter.description}</p>
+            </div>
+            <label className="toggle-switch">
+              <span className="visually-hidden">{newsletter.title}</span>
               <input
                 type="checkbox"
                 checked={subscribed.has(newsletter.id)}
                 disabled={isPending}
                 onChange={(event) => toggle(newsletter, event.target.checked)}
               />
-              {newsletter.title}
+              <span className="toggle-switch__track" aria-hidden="true" />
             </label>
-            <p>{newsletter.description}</p>
           </li>
         ))}
       </ul>

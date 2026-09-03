@@ -25,9 +25,15 @@ export function BlacklistToggle({ blacklistSource }: { blacklistSource: string |
   }
 
   return (
-    <label>
-      <input type="checkbox" checked={blacklisted} disabled={isPending} onChange={toggle} />
-      {blacklisted ? `Blacklisted (${source})` : "Blacklist email"}
-    </label>
+    <div className="toggle-row toggle-row--flush">
+      <p className="toggle-row__title">
+        {blacklisted ? `Blacklisted (${source})` : "Blacklist email"}
+      </p>
+      <label className="toggle-switch">
+        <span className="visually-hidden">Blacklist email</span>
+        <input type="checkbox" checked={blacklisted} disabled={isPending} onChange={toggle} />
+        <span className="toggle-switch__track" aria-hidden="true" />
+      </label>
+    </div>
   );
 }

@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { decryptInfosoftId } from "@/lib/integrations/e-avis-crypto";
+import { SmsForm } from "./SmsForm";
 
 type Device = "ios" | "android" | null;
 
@@ -47,25 +48,26 @@ export default async function EAvisPage(props: PageProps<"/e-avis">) {
   const links = buildLinks(device, infosoftId, hash);
 
   return (
-    <main data-infosoft={infosoftId !== null}>
+    <main className="page page--narrow" data-infosoft={infosoftId !== null}>
       <h1>Kristeligt Dagblads e-avis</h1>
 
       {device ? (
-        <div>
-          <a id="button-app" href={links.openApp}>
+        <div className="button-row">
+          <a className="button" id="button-app" href={links.openApp}>
             Åbn i app
           </a>
-          {links.getApp && <a href={links.getApp}>Hent app</a>}
+          {links.getApp && (
+            <a className="button button--secondary" href={links.getApp}>
+              Hent app
+            </a>
+          )}
         </div>
       ) : (
         <div>
-          <a href={links.openApp}>Læs e-avisen</a>
-          <form action="/send-sms" method="post" id="sms_form">
-            <label htmlFor="phone">Få et link til appen på SMS</label>
-            <input type="tel" id="phone" name="phone" pattern="^\d{8}$" required />
-            <input type="hidden" name="subscription" value={hash ?? ""} />
-            <button type="submit">Send SMS</button>
-          </form>
+          <a className="button" href={links.openApp}>
+            Læs e-avisen
+          </a>
+          <SmsForm hash={hash} />
         </div>
       )}
     </main>

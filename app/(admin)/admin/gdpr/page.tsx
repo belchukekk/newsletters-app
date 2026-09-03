@@ -12,7 +12,7 @@ export default async function GdprPage() {
   const events = await getGdprOverview(email);
 
   return (
-    <main>
+    <main className="page">
       <h1>GDPR-oversigt</h1>
       <GdprEventsTable events={events} />
     </main>

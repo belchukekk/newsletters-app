@@ -62,3 +62,19 @@ export async function fetchBblByQuery(
   const result = await response.json();
   return result?.hits?.hits;
 }
+
+// Port of BblService::fetchGet — a plain GET against the bigbucket index
+// (not an ES query DSL POST), used by /gdpr/delete's existing-request check.
+export async function fetchBblGet(
+  query: Record<string, string>
+): Promise<Array<Record<string, unknown>> | undefined> {
+  const params = new URLSearchParams(query);
+  const response = await fetch(`${requireEnv("BBL_URL")}api/v1/bigbucket?${params}`, {
+    headers: {
+      Accept: "application/json",
+      "X-Authorization": requireEnv("BBL_AUTH_TOKEN"),
+    },
+  });
+  const result = await response.json();
+  return result?.hits?.hits;
+}

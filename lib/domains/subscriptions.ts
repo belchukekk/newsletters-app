@@ -213,6 +213,142 @@ export async function logUnsubscribeFeedback(params: {
   }
 }
 
+// --- Admin-only additions (phase 5) ---
+
+export type AdminSubscriptionRow = {
+  id: string;
+  source: string;
+  timestamp: string;
+  status: number;
+  cacheEvent: "subscribed" | "unsubscribed" | null;
+};
+
+interface AdminSubscriptionRawRow extends RowDataPacket {
+  list: string;
+  source: string;
+  timestamp: string;
+  status: number;
+}
+
+// Port of UserList::getPersistentData($email, isAdmin=true) — unlike the
+// non-admin path, this has no `status = 1` filter and never touches the
+// cache.
+async function getPersistentSubscriptionsAdmin(
+  email: string
+): Promise<AdminSubscriptionRow[]> {
+  const pool = await getPool();
+  const [rows] = await pool.query<AdminSubscriptionRawRow[]>(
+    `SELECT list, source, timestamp, status FROM kd_customer.email_list_current_mv WHERE email = ?`,
+    [email]
+  );
+  return rows.map((row) => ({
+    id: row.list,
+    source: row.source,
+    timestamp: String(row.timestamp),
+    status: row.status,
+    cacheEvent: null,
+  }));
+}
+
+// Port of UserList::getUserListsAdmin — a three-way, display-only merge of
+// persistent DB rows against the cache (cache wins for freshness). This
+// never writes back to the DB; it only annotates rows so the admin dashboard
+// can show where cache and DB have drifted.
+export async function getUserSubscriptionsAdmin(
+  email: string
+): Promise<AdminSubscriptionRow[]> {
+  const persistentData = await getPersistentSubscriptionsAdmin(email);
+  const cachedData = await redis.get<string[]>(cacheKey(email));
+
+  if (!cachedData || cachedData.length === 0) {
+    return persistentData;
+  }
+
+  const persistentIdsAll: string[] = [];
+  const persistentIdsPublished: string[] = [];
+  const result = persistentData.map((row) => ({ ...row }));
+
+  for (const row of result) {
+    persistentIdsAll.push(row.id);
+    if (row.status === 1) persistentIdsPublished.push(row.id);
+    if (cachedData.includes(row.id) && !row.status) {
+      row.status = 1;
+      row.cacheEvent = "subscribed";
+    }
+  }
+
+  const cacheAdded = cachedData.filter((id) => !persistentIdsAll.includes(id));
+  for (const id of cacheAdded) {
+    result.push({ id, source: "", timestamp: "", status: 1, cacheEvent: "subscribed" });
+  }
+
+  const cacheRemoved = persistentIdsPublished.filter((id) => !cachedData.includes(id));
+  for (const row of result) {
+    if (cacheRemoved.includes(row.id)) {
+      row.status = 0;
+      row.cacheEvent = "unsubscribed";
+    }
+  }
+
+  return result;
+}
+
+const BLACKLIST_CACHE_TTL_SECONDS = 7200;
+
+function blacklistCacheKey(email: string): string {
+  return `blacklist:${normalize(email)}`;
+}
+
+interface BlacklistRow extends RowDataPacket {
+  source: string;
+}
+
+// Port of NewsletterCloudSQL::getBlacklist + UserList::getBlacklist —
+// DB-first, cache-fallback (the opposite pattern from subscriptions, which
+// are cache-first). Blacklist is display-only in the old app and stays that
+// way here: it never gates subscribe/unsubscribe.
+export async function getBlacklistSource(email: string): Promise<string | null> {
+  const pool = await getPool();
+  const [rows] = await pool.query<BlacklistRow[]>(
+    `SELECT source FROM email_blacklist_complete WHERE email = ?`,
+    [email]
+  );
+  const source = rows[0]?.source;
+  if (source) return source;
+  return (await redis.get<string>(blacklistCacheKey(email))) ?? null;
+}
+
+// Port of UserList::setBlacklistCache.
+export async function setBlacklistCache(
+  email: string,
+  value: string | null
+): Promise<void> {
+  const key = blacklistCacheKey(email);
+  if (value) {
+    await redis.set(key, value, { ex: BLACKLIST_CACHE_TTL_SECONDS });
+  } else {
+    await redis.del(key);
+  }
+}
+
+// Port of the BBL payload in AdminController::blacklistLogAction.
+export async function logBlacklistEvent(params: {
+  email: string;
+  adminEmail: string;
+  status: boolean;
+}): Promise<void> {
+  await logToBbl(
+    {
+      mail: params.email,
+      event: "blacklist",
+      status: params.status,
+      source: "nl_admin",
+      admin: params.adminEmail,
+    },
+    "https://nyhedsbreve.kristeligt-dagblad.dk"
+  );
+}
+
 function requireEnv(name: string): string {
   const value = process.env[name];
   if (!value) throw new Error(`Missing required env var: ${name}`);

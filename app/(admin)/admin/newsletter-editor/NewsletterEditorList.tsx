@@ -12,7 +12,7 @@ import {
 import {
   SortableContext,
   arrayMove,
-  verticalListSortingStrategy,
+  rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import type { Newsletter } from "@/lib/domains/newsletters";
 import { NewsletterCard } from "./NewsletterCard";
@@ -68,7 +68,7 @@ export function NewsletterEditorList({
       >
         <SortableContext
           items={newsletters.map((n) => n.id)}
-          strategy={verticalListSortingStrategy}
+          strategy={rectSortingStrategy}
         >
           <ul className="editor-list">
             {newsletters.map((newsletter) => (

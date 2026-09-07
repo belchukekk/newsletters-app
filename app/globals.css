@@ -297,6 +297,22 @@ button {
   font-size: 0.9375rem;
 }
 
+.form-field--inline-search {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--su-m);
+  flex-wrap: wrap;
+  margin-bottom: var(--su-l);
+}
+.form-field--inline-search .form-field {
+  flex: 1;
+  min-width: 220px;
+  margin-bottom: 0;
+}
+.form-field--inline-search .button {
+  flex-shrink: 0;
+}
+
 fieldset {
   border: 0;
   margin-bottom: var(--su-m);

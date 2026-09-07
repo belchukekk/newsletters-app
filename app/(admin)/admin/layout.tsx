@@ -16,6 +16,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
         <nav className="admin-bar__nav">
           <Link href="/admin">Admin</Link>
           <Link href="/admin/newsletter-editor">Nyhedsbreve</Link>
+          <Link href="/admin/users">Brugere</Link>
           <Link href="/admin/gdpr">GDPR</Link>
         </nav>
         <div className="admin-bar__account">

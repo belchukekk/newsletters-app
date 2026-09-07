@@ -18,8 +18,12 @@ let client: BigQuery | undefined;
 // its default project. So both credential paths here load the full service
 // account JSON themselves and pass `projectId` explicitly.
 function loadCredentials(): { credentials: Record<string, unknown>; projectId: string } {
-  const inlineJson = process.env.GOOGLE_CLOUD_CREDENTIALS_JSON;
-  const raw = inlineJson ?? readFileSync(requireEnv("GOOGLE_APPLICATION_CREDENTIALS"), "utf8");
+  // `||`, not `??` — an unset-but-declared env var (as in .env.local, where
+  // this is deliberately left blank for local dev) is an empty string, not
+  // undefined, so `??` would use it as-is instead of falling back to the file.
+  const raw =
+    process.env.GOOGLE_CLOUD_CREDENTIALS_JSON ||
+    readFileSync(requireEnv("GOOGLE_APPLICATION_CREDENTIALS"), "utf8");
   const credentials = JSON.parse(raw);
   return { credentials, projectId: credentials.project_id };
 }
@@ -44,7 +48,7 @@ function formatBigQueryTimestamp(value: unknown): string {
 export type EmailEvent = {
   timestamp: string;
   eventType: "sent" | "opened" | "bounced";
-  url: string;
+  url: string | null;
   list: unknown;
   campaignName: unknown;
   [key: string]: unknown;
@@ -59,11 +63,18 @@ export async function getEmailEventHistory(email: string): Promise<EmailEvent[]>
 
   return (rows as Record<string, unknown>[]).map((row) => {
     const eventType = row.hard_bounced ? "bounced" : row.opened ? "opened" : "sent";
+    // list_id/campaign_id/message_id are null for non-campaign (system) sends
+    // — building a link with literal "null" segments in it is worse than no
+    // link at all.
+    const hasCampaignRef =
+      row.list_id != null && row.campaign_id != null && row.message_id != null;
     return {
       ...row,
       timestamp: formatBigQueryTimestamp(row.sent_ts),
       eventType,
-      url: `${ACTIVE_CAMPAIGN_URL}?l=${row.list_id}&c=${row.campaign_id}&m=${row.message_id}`,
+      url: hasCampaignRef
+        ? `${ACTIVE_CAMPAIGN_URL}?l=${row.list_id}&c=${row.campaign_id}&m=${row.message_id}`
+        : null,
       list: row.list,
       campaignName: row.campaign_name,
     } as EmailEvent;

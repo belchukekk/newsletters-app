@@ -80,9 +80,13 @@ export default async function AdminDashboardPage(props: PageProps<"/admin">) {
                     <td>{event.timestamp}</td>
                     <td>{String(event.list ?? "")}</td>
                     <td>
-                      <a href={event.url} target="_blank" rel="noreferrer">
-                        {String(event.campaignName ?? "")}
-                      </a>
+                      {event.url ? (
+                        <a href={event.url} target="_blank" rel="noreferrer">
+                          {String(event.campaignName ?? "")}
+                        </a>
+                      ) : (
+                        String(event.campaignName ?? "—")
+                      )}
                     </td>
                     <td>
                       <span

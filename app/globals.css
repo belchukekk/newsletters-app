@@ -379,16 +379,22 @@ legend {
 
 /* ---------- Newsletter cards ---------- */
 
-.newsletter-list {
+.promo-row {
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--su-m);
-  margin-bottom: var(--su-l);
+  margin-bottom: var(--su-m);
 }
 
 @media (min-width: 768px) {
-  .newsletter-list {
+  .promo-row--cols-2 {
     grid-template-columns: 1fr 1fr;
+  }
+  .promo-row--cols-3 {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  .promo-row--cols-4 {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
   }
 }
 
@@ -714,6 +720,66 @@ legend {
 .editor-list__status {
   font-size: 0.875rem;
   color: var(--color-text-secondary);
+}
+
+/* ---------- Promo grid editor ---------- */
+
+.promo-editor-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--su-l);
+  margin-bottom: var(--su-m);
+}
+
+.promo-editor-row {
+  border: 1px solid var(--color-cloudy);
+  border-radius: var(--radius);
+  padding: var(--su-m);
+  background-color: var(--color-white);
+}
+
+.promo-editor-row__header {
+  display: flex;
+  align-items: center;
+  gap: var(--su-m);
+  margin-bottom: var(--su-m);
+  flex-wrap: wrap;
+}
+
+.promo-editor-row__columns {
+  display: flex;
+  align-items: center;
+  gap: var(--su-s);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+.promo-editor-row__columns select {
+  width: auto;
+}
+
+.promo-slot {
+  border: 1px solid var(--color-cloudy);
+  border-radius: var(--radius);
+  padding: var(--su-m);
+  background-color: var(--color-smoke);
+}
+
+.promo-slot__fallback-toggle {
+  margin: var(--su-m) 0;
+}
+
+.promo-entry {
+  display: flex;
+  flex-direction: column;
+  gap: var(--su-s);
+}
+
+.promo-entry__preview {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: var(--radius);
+  background-color: var(--color-tertiary);
 }
 
 /* ---------- Utilities ---------- */

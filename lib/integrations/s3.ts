@@ -19,13 +19,7 @@ function getClient(): S3Client {
   return client;
 }
 
-// Port of AdminController::saveNewsletterAction's S3 upload — key pattern
-// "{prefix}{newsletterId}.{ext}", overwriting any previous image for that id,
-// no resizing (uploaded as-is, matching the old app).
-export async function uploadNewsletterImage(
-  newsletterId: string,
-  file: File
-): Promise<string> {
+async function uploadImage(key: string, file: File): Promise<string> {
   const extension = EXTENSION_BY_MIME[file.type];
   if (!extension) {
     throw new Error(`Unsupported image type: ${file.type}`);
@@ -33,19 +27,37 @@ export async function uploadNewsletterImage(
 
   const bucket = requireEnv("S3_BUCKET");
   const region = requireEnv("AWS_REGION");
-  const prefix = process.env.S3_IMAGE_PREFIX ?? "";
-  const key = `${prefix}${newsletterId}.${extension}`;
+  const fullKey = `${key}.${extension}`;
 
   await getClient().send(
     new PutObjectCommand({
       Bucket: bucket,
-      Key: key,
+      Key: fullKey,
       Body: Buffer.from(await file.arrayBuffer()),
       ContentType: file.type,
     })
   );
 
-  return `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
+  return `https://${bucket}.s3.${region}.amazonaws.com/${fullKey}`;
+}
+
+// Port of AdminController::saveNewsletterAction's S3 upload — key pattern
+// "{prefix}{newsletterId}.{ext}", overwriting any previous image for that id,
+// no resizing (uploaded as-is, matching the old app).
+export async function uploadNewsletterImage(
+  newsletterId: string,
+  file: File
+): Promise<string> {
+  const prefix = process.env.S3_IMAGE_PREFIX ?? "";
+  return uploadImage(`${prefix}${newsletterId}`, file);
+}
+
+// New (not a legacy port): custom promotional image for a frontpage promo
+// grid slot — a distinct key namespace so it never collides with or
+// overwrites a newsletter's own canonical thumbnail.
+export async function uploadPromoImage(entryId: string, file: File): Promise<string> {
+  const prefix = process.env.S3_IMAGE_PREFIX ?? "";
+  return uploadImage(`${prefix}promo/${entryId}`, file);
 }
 
 function requireEnv(name: string): string {

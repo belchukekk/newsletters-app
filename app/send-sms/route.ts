@@ -1,7 +1,7 @@
 import type { RowDataPacket } from "mysql2";
 import { NextResponse } from "next/server";
 import { getPool } from "@/lib/server/db";
-import { decryptInfosoftId, encryptInfosoftId } from "@/lib/integrations/e-avis-crypto";
+import { decryptIterasId, encryptIterasId } from "@/lib/integrations/e-avis-crypto";
 import { sendSms } from "@/lib/integrations/inmobile-sms";
 
 const SMS_SENDER_NAME = "Kr. Dagblad";
@@ -11,31 +11,33 @@ const SMS_TEXT_WITH_CUSTOMER =
 const SMS_TEXT_NO_CUSTOMER =
   "Hent Kristeligt Dagblads app her: https://nyhedsbreve.kristeligt-dagblad.dk/e-avis. Login med samme oplysninger som på www.k.dk, eller kontakt kundeservice på tlf. 33 48 05 05 eller abonnement@k.dk";
 
-interface InfosoftRow extends RowDataPacket {
-  infosoft_id: number;
+interface IterasCustomerRow extends RowDataPacket {
+  customer_id: number;
 }
 
-// Port of Controller::getInfosoftId — resolves the target's Infosoft
-// subscriber id either from an already-encrypted hash (subscription param,
-// carried over from /e-avis) or by phone lookup in customer_infosoft.
-async function resolveInfosoftId(
+// Port of Controller::getInfosoftId — resolves the target's Iteras customer
+// id either from an already-encrypted hash (subscription param, carried over
+// from /e-avis) or by phone lookup in customer_iteras. (Formerly a lookup
+// against customer_infosoft/infosoft_id — Infosoft has been fully replaced
+// by Iteras as the subscription system.)
+async function resolveCustomerId(
   phone: string,
   hash: string | undefined
-): Promise<{ infosoftId: string | null; hash: string | undefined }> {
+): Promise<{ customerId: string | null; hash: string | undefined }> {
   if (hash) {
-    return { infosoftId: decryptInfosoftId(hash), hash };
+    return { customerId: decryptIterasId(hash), hash };
   }
 
   const pool = await getPool();
-  const [rows] = await pool.query<InfosoftRow[]>(
-    `SELECT * FROM kd_customer.customer_infosoft WHERE phone1 LIKE ? OR phone2 LIKE ? LIMIT 1`,
+  const [rows] = await pool.query<IterasCustomerRow[]>(
+    `SELECT * FROM kd_customer.customer_iteras WHERE phone_number = ? OR cell_phone_number = ? LIMIT 1`,
     [phone, phone]
   );
-  const infosoftId = rows[0]?.infosoft_id;
-  if (infosoftId === undefined) return { infosoftId: null, hash: undefined };
+  const customerId = rows[0]?.customer_id;
+  if (customerId === undefined) return { customerId: null, hash: undefined };
 
-  const infosoftIdStr = String(infosoftId);
-  return { infosoftId: infosoftIdStr, hash: encryptInfosoftId(infosoftIdStr) ?? undefined };
+  const customerIdStr = String(customerId);
+  return { customerId: customerIdStr, hash: encryptIterasId(customerIdStr) ?? undefined };
 }
 
 // Port of Controller::smsAction (/send-sms, AJAX-only) — looks up a
@@ -52,14 +54,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false }, { status: 400 });
   }
 
-  const { infosoftId, hash: resolvedHash } = await resolveInfosoftId(phone, hash);
+  const { customerId, hash: resolvedHash } = await resolveCustomerId(phone, hash);
 
   const text =
-    infosoftId && resolvedHash
+    customerId && resolvedHash
       ? SMS_TEXT_WITH_CUSTOMER.replace(
           "%s",
           EAVIS_URL_TEMPLATE + encodeURIComponent(resolvedHash)
-        ).replace("%d", infosoftId)
+        ).replace("%d", customerId)
       : SMS_TEXT_NO_CUSTOMER;
 
   const success = await sendSms({ phone, text, senderName: SMS_SENDER_NAME });

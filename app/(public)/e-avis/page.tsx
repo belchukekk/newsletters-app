@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { decryptInfosoftId } from "@/lib/integrations/e-avis-crypto";
+import { decryptIterasId } from "@/lib/integrations/e-avis-crypto";
 import { SmsForm } from "./SmsForm";
 
 type Device = "ios" | "android" | null;
@@ -12,18 +12,18 @@ function detectDevice(userAgent: string): Device {
   return null;
 }
 
-function buildLinks(device: Device, infosoftId: string | null, hash: string | undefined) {
+function buildLinks(device: Device, customerId: string | null, hash: string | undefined) {
   if (device === "ios") {
     return {
-      openApp: infosoftId
-        ? `kristeligtdagblad://open?savedvoucher=${infosoftId}`
+      openApp: customerId
+        ? `kristeligtdagblad://open?savedvoucher=${customerId}`
         : "kristeligtdagblad://open",
       getApp: "https://itunes.apple.com/dk/app/kristeligt-dagblad/id547578719?mt=8",
     };
   }
   if (device === "android") {
     return {
-      openApp: `intent://reader/#Intent;scheme=kristeligtdagblad;package=dk.kristeligtdagblad.areader;S.argument=open;S.customer=kristeligtdagblad;S.subscription_number=${infosoftId ?? ""};end`,
+      openApp: `intent://reader/#Intent;scheme=kristeligtdagblad;package=dk.kristeligtdagblad.areader;S.argument=open;S.customer=kristeligtdagblad;S.subscription_number=${customerId ?? ""};end`,
       getApp: "https://play.google.com/store/apps/details?id=dk.kristeligtdagblad.areader",
     };
   }
@@ -37,18 +37,22 @@ function buildLinks(device: Device, infosoftId: string | null, hash: string | un
 
 // Port of Controller::eAvisAction / EAvis.php — fully self-contained: no
 // session, no DB writes, just AES decrypt + device detect + static links.
+// The encrypted id is the Iteras customer id (customer_iteras.customer_id) —
+// Infosoft has been fully replaced by Iteras as the subscription system, and
+// the mobile app now expects this same id in the savedvoucher/
+// subscription_number deep-link params.
 export default async function EAvisPage(props: PageProps<"/e-avis">) {
   const searchParams = await props.searchParams;
   const hashParam = searchParams.subscription;
   const hash = Array.isArray(hashParam) ? hashParam[0] : hashParam;
 
-  const infosoftId = hash ? decryptInfosoftId(hash) : null;
+  const customerId = hash ? decryptIterasId(hash) : null;
   const userAgent = (await headers()).get("user-agent") ?? "";
   const device = detectDevice(userAgent);
-  const links = buildLinks(device, infosoftId, hash);
+  const links = buildLinks(device, customerId, hash);
 
   return (
-    <main className="page page--narrow" data-infosoft={infosoftId !== null}>
+    <main className="page page--narrow" data-customer={customerId !== null}>
       <h1>Kristeligt Dagblads e-avis</h1>
 
       {device ? (

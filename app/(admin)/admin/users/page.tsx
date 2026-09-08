@@ -80,7 +80,7 @@ async function UserSubscriptions({ email }: { email: string }) {
         </p>
       ) : (
         <p className="notice notice--info">
-          Ingen kundeprofil fundet i Infosoft for denne e-mail — viser kun nyhedsbrevsdata.
+          Ingen kundeprofil fundet i Iteras for denne e-mail — viser kun nyhedsbrevsdata.
         </p>
       )}
       <AdminUserToggleList email={email} newsletters={newsletters} initialRows={initialRows} />

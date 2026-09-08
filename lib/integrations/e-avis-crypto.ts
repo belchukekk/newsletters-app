@@ -1,7 +1,10 @@
 import { createCipheriv, createDecipheriv } from "crypto";
 
-// Decrypts the "Infosoft" subscriber id shared with ActiveCampaign — port of
-// EAvis.php's openssl_decrypt(..., AES-256-CBC, ..., 0, ...) call.
+// Decrypts the Iteras customer id shared with ActiveCampaign — port of
+// EAvis.php's openssl_decrypt(..., AES-256-CBC, ..., 0, ...) call. (Formerly
+// an Infosoft subscriber id — Infosoft has been fully replaced by Iteras as
+// the subscription system; the mobile app now expects customer_iteras.customer_id
+// in this same encrypted slot.)
 //
 // PHP's openssl_decrypt right-pads a too-short key with '\0' bytes up to the
 // cipher's required length (32 bytes for AES-256) rather than erroring, so we
@@ -13,7 +16,7 @@ function toAes256Key(rawKey: string): Buffer {
   return key;
 }
 
-export function decryptInfosoftId(hash: string): string | null {
+export function decryptIterasId(hash: string): string | null {
   const rawKey = process.env.NL_AC_ENC_KEY;
   const rawIv = process.env.NL_AC_ENC_IV;
   if (!rawKey || !rawIv || !hash) return null;
@@ -38,7 +41,7 @@ export function decryptInfosoftId(hash: string): string | null {
 // already carry one. Legacy urlencode()s the result; that's a
 // URL-construction concern, left to the caller (encodeURIComponent) rather
 // than baked into this function.
-export function encryptInfosoftId(infosoftId: string): string | null {
+export function encryptIterasId(customerId: string): string | null {
   const rawKey = process.env.NL_AC_ENC_KEY;
   const rawIv = process.env.NL_AC_ENC_IV;
   if (!rawKey || !rawIv) return null;
@@ -47,7 +50,7 @@ export function encryptInfosoftId(infosoftId: string): string | null {
     const key = toAes256Key(rawKey);
     const iv = Buffer.from(rawIv, "utf8");
     const cipher = createCipheriv("aes-256-cbc", key, iv);
-    return Buffer.concat([cipher.update(infosoftId, "utf8"), cipher.final()]).toString("base64");
+    return Buffer.concat([cipher.update(customerId, "utf8"), cipher.final()]).toString("base64");
   } catch {
     return null;
   }

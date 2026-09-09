@@ -125,6 +125,7 @@ button {
 .site-header {
   display: flex;
   align-items: center;
+  justify-content: center;
   height: 56px;
   padding: 0 var(--su-m);
   background-color: var(--color-primary);
@@ -382,44 +383,65 @@ legend {
 .promo-row {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--su-m);
+  gap: var(--su-l) var(--su-m);
   margin-bottom: var(--su-m);
 }
+/* Puck wraps a slot's contents in one shared container div — without this,
+   that wrapper would be the row's only grid item instead of each card. */
+.promo-row > div {
+  display: contents;
+}
 
-@media (min-width: 768px) {
+/* A 3-column row shows 2 across even on small devices (rather than
+   stacking to 1) and only goes to the full 3 across at lg. */
+.promo-row--cols-3 {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
   .promo-row--cols-2 {
     grid-template-columns: 1fr 1fr;
   }
   .promo-row--cols-3 {
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
   }
   .promo-row--cols-4 {
     grid-template-columns: 1fr 1fr 1fr 1fr;
   }
 }
 
+@media (min-width: 1024px) {
+  .promo-row--cols-3 {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
 .newsletter-card {
   display: flex;
-  gap: var(--su-m);
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
   border: 1px solid var(--color-cloudy);
   border-radius: var(--radius);
-  padding: var(--su-m);
+  overflow: hidden;
 }
 .newsletter-card__media {
-  flex-shrink: 0;
-  width: 72px;
-  height: 72px;
-  border-radius: var(--radius);
+  width: 100%;
+  aspect-ratio: 1 / 1;
   object-fit: cover;
   background-color: var(--color-tertiary);
 }
 .newsletter-card__body {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   min-width: 0;
+  padding: var(--su-m);
 }
 .newsletter-card__title {
-  font-family: var(--font-sans-stack);
-  font-size: 1rem;
+  font-family: var(--font-serif-stack);
+  font-size: 1.125rem;
   font-weight: 700;
   margin-bottom: var(--su-xs);
 }
@@ -431,6 +453,80 @@ legend {
 .newsletter-card__link {
   font-size: 0.9375rem;
   font-weight: 700;
+  margin-top: auto;
+}
+
+/* "Promotion" component — an original, simplified two-column feature
+   treatment, not a clone of any specific reference illustration (see plan
+   notes on the hero image). backgroundColor is set inline per-instance (see
+   PromotionCard) since it's admin-configurable, not a fixed design token. */
+.promo-feature {
+  display: grid;
+  grid-template-columns: 1fr;
+  border-radius: var(--su-m);
+  overflow: hidden;
+}
+@media (min-width: 640px) {
+  .promo-feature {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.promo-feature-bleed {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  margin-bottom: var(--su-xl);
+}
+.promo-feature-bleed__inner {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 var(--su-m);
+}
+.promo-feature-bleed .promo-feature {
+  border-radius: 0;
+}
+.promo-feature__text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: var(--su-xxl) var(--su-xl);
+}
+.promo-feature__eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-secondary);
+  margin-bottom: var(--su-s);
+}
+.promo-feature__title {
+  font-family: var(--font-serif-stack);
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: var(--su-m);
+}
+@media (min-width: 768px) {
+  .promo-feature__title {
+    font-size: 2.5rem;
+  }
+}
+.promo-feature__tagline {
+  font-size: 1.0625rem;
+  color: var(--color-text-primary);
+  margin-bottom: var(--su-m);
+}
+.promo-feature__cta {
+  margin-bottom: var(--su-l);
+}
+.promo-feature__media {
+  min-height: 260px;
+}
+.promo-feature__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background-color: var(--color-tertiary);
 }
 
 .newsletter-toggle {
@@ -438,10 +534,56 @@ legend {
   flex-direction: column;
   align-items: flex-start;
   gap: var(--su-xs);
+  margin-top: auto;
 }
-.newsletter-toggle__error {
-  font-size: 0.75rem;
-  padding: 2px var(--su-xs);
+.newsletter-toggle__row {
+  display: flex;
+  align-items: center;
+  gap: var(--su-s);
+}
+.newsletter-toggle__status {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+/* ---------- Toast ---------- */
+
+.toast-stack {
+  position: fixed;
+  bottom: var(--su-l);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--su-s);
+  z-index: 1000;
+  pointer-events: none;
+}
+.toast {
+  pointer-events: auto;
+  padding: var(--su-s) var(--su-l);
+  border-radius: var(--radius);
+  background-color: var(--color-text-primary);
+  color: var(--color-white);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  animation: toast-in 0.2s ease;
+}
+.toast--error {
+  background-color: var(--color-burgundy);
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ---------- Toggle rows (manage / push / admin lists) ---------- */
@@ -914,6 +1056,38 @@ legend {
   margin: var(--su-m) 0;
 }
 
+.accordion-header {
+  display: flex;
+  align-items: center;
+  gap: var(--su-s);
+}
+.accordion-header__toggle {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--su-xs);
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+.accordion-header__chevron {
+  flex-shrink: 0;
+  width: 1em;
+  color: var(--color-text-tertiary);
+}
+.accordion-header__meta {
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
+.accordion-body {
+  margin-top: var(--su-m);
+}
+
 /* Searchable newsletter picker */
 .picker {
   position: relative;
@@ -1195,6 +1369,151 @@ legend {
   object-fit: cover;
   border-radius: var(--radius);
   background-color: var(--color-tertiary);
+}
+
+/* ---------- Homepage hero (Puck-authored, see lib/puck/) ---------- */
+/* An original, simplified visual treatment — not a clone of any specific
+   reference design's bespoke illustration, which doesn't exist as an asset
+   anywhere in this codebase. Built entirely from the existing brand tokens
+   above. */
+
+.hero__eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  /* color: var(--color-secondary); */
+  margin: 0 0 var(--su-s);
+}
+
+.hero__heading {
+  font-family: var(--font-serif-stack);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--su-m);
+}
+
+h1.hero__heading {
+  font-size: 2.5rem;
+}
+
+h2.hero__heading {
+  font-size: 1.5rem;
+  /* margin-top: var(--su-xxl); */
+}
+
+@media (min-width: 768px) {
+  h1.hero__heading {
+    font-size: 3.25rem;
+  }
+}
+
+.hero__body {
+  font-size: 1.0625rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  max-width: 60ch;
+  margin: 0 0 var(--su-l);
+}
+
+.hero__annotation {
+  display: inline-block;
+  font-family: var(--font-slab-stack);
+  font-style: italic;
+  font-size: 0.9375rem;
+  color: var(--color-primary);
+  margin: var(--su-l) 0;
+}
+
+.hero-image {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  object-fit: cover;
+  margin: 0 auto;
+}
+
+.hero-image--rounded {
+  border-radius: var(--su-xxl);
+}
+
+.hero-image--soft {
+  border-radius: 40% 60% 55% 45% / 45% 40% 60% 55%;
+}
+
+.hero-image--empty {
+  aspect-ratio: 4 / 3;
+  background-color: var(--color-tertiary);
+  border-radius: var(--radius);
+}
+
+.two-column {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--su-xl);
+  align-items: center;
+  margin-bottom: var(--su-l);
+}
+
+@media (min-width: 768px) {
+  .two-column {
+    grid-template-columns: 1fr 1fr;
+  }
+  .two-column--ratio-2-1 {
+    grid-template-columns: 2fr 1fr;
+  }
+  .two-column--ratio-1-2 {
+    grid-template-columns: 1fr 2fr;
+  }
+}
+
+.two-column__col > *:last-child {
+  margin-bottom: 0;
+}
+
+.spacer--s {
+  height: var(--su-m);
+}
+.spacer--m {
+  height: var(--su-xl);
+}
+.spacer--l {
+  height: var(--su-xxl);
+}
+.spacer--xl {
+  height: var(--su-xxxl);
+}
+
+/* ---------- Homepage editor (/admin/homepage, full-viewport) ---------- */
+
+.homepage-editor {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.homepage-editor__topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--su-m);
+  padding: var(--su-s) var(--su-m);
+  border-bottom: 1px solid var(--color-cloudy);
+  background-color: var(--color-white);
+  flex-shrink: 0;
+}
+
+.homepage-editor__back {
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.homepage-editor > :last-child {
+  flex: 1;
+  min-height: 0;
 }
 
 /* ---------- Utilities ---------- */

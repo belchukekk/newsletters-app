@@ -1,35 +1,15 @@
 import { redirect } from "next/navigation";
-import { auth, signOut } from "@/lib/server/auth-admin";
-import { AdminNav } from "./AdminNav";
+import { auth } from "@/lib/server/auth-admin";
 
 // Defense in depth beyond proxy.ts's optimistic check — proxy only redirects
 // unauthenticated requests, this re-verifies the session server-side too.
+// Auth-only: the sidebar shell lives in (shell)/layout.tsx so that
+// /admin/homepage can render full-viewport without it.
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const session = await auth();
   if (!session?.user) {
     redirect("/api/auth/signin");
   }
 
-  return (
-    <div className="admin-shell">
-      <aside className="admin-sidebar">
-        <div className="admin-sidebar__brand">Admin</div>
-        <AdminNav />
-        <div className="admin-sidebar__account">
-          <span className="admin-sidebar__email">{session.user.email}</span>
-          <form
-            action={async () => {
-              "use server";
-              await signOut();
-            }}
-          >
-            <button className="admin-sidebar__signout" type="submit">
-              Log ud
-            </button>
-          </form>
-        </div>
-      </aside>
-      <div className="admin-shell__content">{children}</div>
-    </div>
-  );
+  return children;
 }

@@ -13,6 +13,14 @@ import type { Newsletter } from "@/lib/domains/newsletters";
 // kd_customer (KD's shared production customer database) — this is app
 // configuration, not customer data, and Upstash Redis is a durable, persisted
 // store, not just a TTL'd cache, so this is safe as the source of truth.
+//
+// Superseded by the Puck-powered homepage (see lib/domains/homepage.ts),
+// which folds a grid's rows into its own NewsletterGrid component's props
+// instead of this standalone key. getPromoGrid/savePromoGrid stay here
+// on purpose: savePromoGrid is unused post-migration, and getPromoGrid is
+// still called once, read-only, to seed the new homepage content the first
+// time it's requested with nothing configured yet — this is intentionally
+// kept, not dead code.
 const PROMO_GRID_KEY = "promo_grid:current";
 
 export type PromoEntry = {

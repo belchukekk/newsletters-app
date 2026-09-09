@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { fontSans, fontSerif, fontSlab } from "./fonts";
 import { Header } from "./Header";
+import { ToastProvider } from "./_components/ToastProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,7 +17,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body>
         <Header />
-        {children}
+        <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
   );

@@ -60,6 +60,13 @@ export async function uploadPromoImage(entryId: string, file: File): Promise<str
   return uploadImage(`${prefix}promo/${entryId}`, file);
 }
 
+// New: an image uploaded into a homepage hero block (ImageBlock component) —
+// keyed by the Puck component instance's own id, in its own namespace.
+export async function uploadHeroImage(blockId: string, file: File): Promise<string> {
+  const prefix = process.env.S3_IMAGE_PREFIX ?? "";
+  return uploadImage(`${prefix}hero/${blockId}`, file);
+}
+
 function requireEnv(name: string): string {
   const value = process.env[name];
   if (!value) throw new Error(`Missing required env var: ${name}`);

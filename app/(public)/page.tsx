@@ -1,126 +1,96 @@
-import Link from "next/link";
+import { Render, resolveAllData, walkTree, type Config, type Data } from "@puckeditor/core";
 import { getPublishedNewsletters } from "@/lib/domains/newsletters";
-import {
-  getPromoGrid,
-  resolvePromoGridForViewer,
-  UTM_NEWSLETTER_PARAM,
-  type ResolvedPromoSlot,
-} from "@/lib/domains/promotions";
+import { getOrSeedHomepageContent } from "@/lib/domains/homepage";
+import { getUserSubscriptions } from "@/lib/domains/subscriptions";
+import { UTM_NEWSLETTER_PARAM } from "@/lib/domains/promotions";
 import { getSession } from "@/lib/server/session";
-import { NewsletterSubscribeToggle } from "./_components/NewsletterSubscribeToggle";
+import { buildPuckConfig } from "@/lib/puck/config";
+import type { HomepageMetadata } from "@/lib/puck/components/Newsletter";
+import { resolvePromotion } from "@/lib/puck/components/Promotion";
+import type { PromotionValue } from "@/lib/puck/fields/PromotionField";
 
-function SlotCard({
-  slot,
-  isLoggedIn,
-  subscribed,
-}: {
-  slot: ResolvedPromoSlot;
-  isLoggedIn: boolean;
-  subscribed: boolean;
-}) {
-  return (
-    <li className="newsletter-card">
-      {/* eslint-disable-next-line @next/next/no-img-element -- thumbnail/promo image hosts vary (local default, S3 newsletter thumbnail, or S3 promo override), not worth a remotePatterns config */}
-      <img className="newsletter-card__media" src={slot.imageUrl} alt="" width={72} height={72} />
-      <div className="newsletter-card__body">
-        <h2 className="newsletter-card__title">{slot.newsletter.title}</h2>
-        <p className="newsletter-card__description">{slot.newsletter.description}</p>
-        {isLoggedIn ? (
-          <NewsletterSubscribeToggle
-            newsletterId={slot.newsletter.id}
-            newsletterTitle={slot.newsletter.title}
-            initialSubscribed={subscribed}
-          />
-        ) : (
-          <Link className="newsletter-card__link" href={`/subscribe?id=${slot.newsletter.id}`}>
-            Tilmeld
-          </Link>
-        )}
-      </div>
-    </li>
-  );
-}
-
-// Replaces the old static full-list frontpage with a marketing-configurable
-// promo grid (see /admin/newsletters) — rows of 1-4 slots, each promoting one
-// newsletter, swapped for a fallback promotion when the viewer is already
-// subscribed to the primary one. A marketing link's UTM tag
-// (?utm_campaign=<newsletter-id>) promotes that newsletter to a full-width
-// row at the top; when that's active, the rest of the grid renders as a
-// uniform 2-column layout (ignoring each row's own configured column count)
-// so it's visually clear which newsletter is the one actually being promoted.
+// Replaces the old static full-list frontpage with a Puck-authored page
+// (see /admin/homepage): a freely-composed hero plus individual Newsletter
+// components arranged in Row components, and any number of Promotion
+// components. A grid Newsletter card only ever defers when a Promotion
+// elsewhere on the page is actively showing the same newsletter — a
+// viewer's subscription status never excludes a grid card by itself;
+// "show another newsletter if subscribed" is a Promotion-only behavior
+// (see lib/puck/components/Promotion.tsx's resolvePromotion).
 //
-// A logged-in viewer (session cookie already set — whether via the /auth
-// magic link they clicked, or one silently triggered in the background by
-// the Drupal site for an already-logged-in visitor) sees an inline toggle
-// per newsletter instead of a "Tilmeld" link, same as /manage.
+// ?utm_campaign=<value> no longer promotes a newsletter to the top of the
+// page the way the old single-grid design did — instead, any Promotion
+// component on the page can be configured with its own UTM-keyed variants
+// (see lib/puck/components/Promotion.tsx), each swapping in a different
+// newsletter/copy/image for that campaign, falling back to its default when
+// nothing matches. When a variant IS active, its displaced default newsletter
+// switches places with it — see collectPromotionEffects below.
 export default async function HomePage(props: PageProps<"/">) {
   const searchParams = await props.searchParams;
   const utmParam = searchParams[UTM_NEWSLETTER_PARAM];
-  const utmNewsletterId = Array.isArray(utmParam) ? utmParam[0] : (utmParam ?? null);
+  const utmCampaign = Array.isArray(utmParam) ? (utmParam[0] ?? null) : (utmParam ?? null);
 
-  const [newsletters, grid, session] = await Promise.all([
+  const [content, newsletters, session] = await Promise.all([
+    getOrSeedHomepageContent(),
     getPublishedNewsletters(),
-    getPromoGrid(),
     getSession(),
   ]);
 
-  const { promotedSlot, rows, subscribedIds } = await resolvePromoGridForViewer(
-    grid,
-    newsletters,
-    session?.email ?? null,
-    utmNewsletterId
+  const subscribedIds = session?.email ? await getUserSubscriptions(session.email) : [];
+  const config = buildPuckConfig({ newsletters });
+
+  // A first pass, ahead of the real resolveAllData call below: figure out
+  // which newsletter every Promotion component on the page is ACTUALLY
+  // showing right now (nominal entry, or its own subscription-fallback —
+  // see resolvePromotion), and — when a UTM variant is active — which
+  // default newsletter it displaced, so a plain Newsletter card elsewhere
+  // can either defer to it or show the displaced default in its place.
+  const { promotedNewsletterIds, swapReplacements } = collectPromotionEffects(
+    content.data,
+    config,
+    utmCampaign,
+    subscribedIds
   );
 
-  const isPromoted = promotedSlot !== null;
-  const isLoggedIn = session !== null;
-
-  function renderSlot(slot: ResolvedPromoSlot) {
-    return (
-      <SlotCard
-        key={slot.id}
-        slot={slot}
-        isLoggedIn={isLoggedIn}
-        subscribed={subscribedIds.includes(slot.newsletter.id)}
-      />
-    );
-  }
+  const metadata: HomepageMetadata = {
+    newsletters,
+    viewerEmail: session?.email ?? null,
+    subscribedIds,
+    utmCampaign,
+    promotedNewsletterIds,
+    swapReplacements,
+  };
+  const resolved = await resolveAllData(content.data, config, metadata);
 
   return (
     <main className="page">
-      <h1>Nyhedsbreve fra Kristeligt Dagblad</h1>
-      <p className="page-intro">
-        Vælg de nyhedsbreve, du vil modtage, og hold dig opdateret med det, der
-        betyder noget for dig.
-      </p>
-
-      {promotedSlot && (
-        <ul className="promo-row promo-row--cols-1">{renderSlot(promotedSlot)}</ul>
-      )}
-
-      {rows.length === 0 && !promotedSlot ? (
-        <p className="notice notice--info">Der er ikke konfigureret nogen nyhedsbreve endnu.</p>
-      ) : isPromoted ? (
-        rows.length > 0 && (
-          <ul className="promo-row promo-row--cols-2">
-            {rows.flatMap((row) => row.slots).map(renderSlot)}
-          </ul>
-        )
-      ) : (
-        rows.map((row) => (
-          // A slot can drop out for this viewer (already subscribed to
-          // everything it could show — see resolvePromoGridForViewer), so
-          // the effective column count reflects what's actually left rather
-          // than leaving a blank gap where the configured column count says
-          // there should be more.
-          <ul
-            key={row.id}
-            className={`promo-row promo-row--cols-${Math.min(row.columns, row.slots.length)}`}
-          >
-            {row.slots.map(renderSlot)}
-          </ul>
-        ))
-      )}
+      <Render config={config} data={resolved} />
     </main>
   );
+}
+
+function collectPromotionEffects(
+  data: Data,
+  config: Config,
+  utmCampaign: string | null,
+  subscribedIds: string[]
+): { promotedNewsletterIds: string[]; swapReplacements: Record<string, string> } {
+  const promotedIds = new Set<string>();
+  const swapReplacements: Record<string, string> = {};
+
+  walkTree(data, config, (nodes) => {
+    for (const node of nodes) {
+      if (node.type === "Promotion") {
+        const promotionConfig = (node.props as unknown as { config: PromotionValue }).config;
+        const { displayedEntry, displacedNewsletterId } = resolvePromotion(promotionConfig, utmCampaign, subscribedIds);
+        const activeId = displayedEntry.newsletterId;
+        if (activeId) promotedIds.add(activeId);
+        if (displacedNewsletterId && displacedNewsletterId !== activeId) {
+          swapReplacements[activeId] = displacedNewsletterId;
+        }
+      }
+    }
+  });
+
+  return { promotedNewsletterIds: Array.from(promotedIds), swapReplacements };
 }

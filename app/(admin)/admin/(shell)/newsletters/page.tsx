@@ -1,22 +1,21 @@
 import { getAdminNewsletters } from "@/lib/domains/newsletters";
-import { getPromoGrid } from "@/lib/domains/promotions";
 import { NewslettersWorkspace } from "./NewslettersWorkspace";
 
-// Single admin surface for both "what newsletters exist" (previously
-// /admin/newsletter-editor) and "how they're promoted on the frontpage"
-// (previously /admin/promotions) — merged so editing a promoted newsletter's
-// own details and its promotion settings is one flow, not two pages.
+// The newsletter catalog — titles, descriptions, images, published status,
+// and basic reordering. What's promoted where on the frontpage is now
+// configured on its own full-viewport page, /admin/homepage (see the
+// sidebar's "Forside" link) — a Puck-based editor, not this one.
 export default async function NewslettersPage() {
-  const [newsletters, grid] = await Promise.all([getAdminNewsletters(), getPromoGrid()]);
+  const newsletters = await getAdminNewsletters();
 
   return (
     <main className="page">
-      <h1>Nyhedsbreve</h1>
+      <h1>Nyhedsbrevskatalog</h1>
       <p className="page-intro">
-        Forsiden viser rækker af 1-4 nyhedsbreve ad gangen. Skift til &quot;Alle nyhedsbreve&quot;
-        for at redigere selve nyhedsbrevene.
+        Klik Rediger for at ændre titel, beskrivelse, billede eller udgivelsesstatus. Se
+        &quot;Forside&quot; i menuen for at ændre, hvordan nyhedsbrevene promoveres på forsiden.
       </p>
-      <NewslettersWorkspace initialNewsletters={newsletters} initialGrid={grid} />
+      <NewslettersWorkspace initialNewsletters={newsletters} />
     </main>
   );
 }

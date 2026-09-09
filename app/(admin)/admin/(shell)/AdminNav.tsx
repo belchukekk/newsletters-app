@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 
 const LINKS = [
   { href: "/admin", label: "Oversigt" },
-  { href: "/admin/newsletters", label: "Nyhedsbreve" },
+  { href: "/admin/homepage", label: "Forside" },
+  { href: "/admin/newsletters", label: "Nyhedsbrevskatalog" },
   { href: "/admin/users", label: "Brugere" },
   { href: "/admin/gdpr", label: "GDPR" },
 ];

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { auth, signOut } from "@/lib/server/auth-admin";
+import { AdminNav } from "./AdminNav";
 
 // Defense in depth beyond proxy.ts's optimistic check — proxy only redirects
 // unauthenticated requests, this re-verifies the session server-side too.
@@ -11,30 +11,25 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   }
 
   return (
-    <div>
-      <div className="admin-bar">
-        <nav className="admin-bar__nav">
-          <Link href="/admin">Admin</Link>
-          <Link href="/admin/newsletter-editor">Nyhedsbreve</Link>
-          <Link href="/admin/promotions">Promoveringer</Link>
-          <Link href="/admin/users">Brugere</Link>
-          <Link href="/admin/gdpr">GDPR</Link>
-        </nav>
-        <div className="admin-bar__account">
-          <span className="admin-bar__email">{session.user.email}</span>
+    <div className="admin-shell">
+      <aside className="admin-sidebar">
+        <div className="admin-sidebar__brand">Admin</div>
+        <AdminNav />
+        <div className="admin-sidebar__account">
+          <span className="admin-sidebar__email">{session.user.email}</span>
           <form
             action={async () => {
               "use server";
               await signOut();
             }}
           >
-            <button className="admin-bar__signout" type="submit">
+            <button className="admin-sidebar__signout" type="submit">
               Log ud
             </button>
           </form>
         </div>
-      </div>
-      {children}
+      </aside>
+      <div className="admin-shell__content">{children}</div>
     </div>
   );
 }

@@ -108,6 +108,10 @@ export type ResolvedPromoGrid = {
   // its configured column count).
   promotedSlot: ResolvedPromoSlot | null;
   rows: ResolvedPromoRow[];
+  // The viewer's own subscribed newsletter ids (empty when anonymous) — so
+  // the page can render an inline toggle instead of a "Tilmeld" link for a
+  // logged-in viewer, without a second cache read.
+  subscribedIds: string[];
 };
 
 // Resolves the grid for a specific viewer (see resolveSlot for the
@@ -165,5 +169,5 @@ export async function resolvePromoGridForViewer(
     }
   }
 
-  return { promotedSlot, rows };
+  return { promotedSlot, rows, subscribedIds };
 }

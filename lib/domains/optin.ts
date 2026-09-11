@@ -1,5 +1,25 @@
 import { fetchBblByQuery, logToBbl } from "@/lib/integrations/bbl";
-import { verifyConfirmSubscriptionChecksum } from "@/lib/server/auth-magic-link";
+import {
+  buildConfirmSubscriptionChecksum,
+  buildUnsubscribeToken,
+  verifyConfirmSubscriptionChecksum,
+} from "@/lib/server/auth-magic-link";
+
+// Port of MailChimpService::getOptinUrl — builds the /confirm-subscription
+// link sent in the opt-in email (chk = md5(id+mail), verified by
+// confirmSubscription below when the recipient clicks it).
+export function buildOptInConfirmUrl(eventId: string, mail: string): string {
+  const chk = buildConfirmSubscriptionChecksum(eventId, mail);
+  return `https://nyhedsbreve.kristeligt-dagblad.dk/confirm-subscription?id=${eventId}&chk=${chk}`;
+}
+
+// Builds the one-click unsubscribe link shown in the opt-in email's FAQ
+// ("fortryder du dine tilmelding") — lands on /newsletter-unsubscribe, which
+// verifies the token and hands off to /unsubscribe for this newsletter.
+export function buildNewsletterUnsubscribeUrl(email: string, newsletterId: string): string {
+  const auth = buildUnsubscribeToken(email);
+  return `https://nyhedsbreve.kristeligt-dagblad.dk/newsletter-unsubscribe?email=${encodeURIComponent(email)}&auth=${auth}&id=${encodeURIComponent(newsletterId)}`;
+}
 
 // Port of OptInService.php — confirms a pending opt-in ("permission") BBL
 // event via the /confirm-subscription link sent by the opt-in email.

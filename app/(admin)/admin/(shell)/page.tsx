@@ -1,24 +1,21 @@
-import Link from "next/link";
 import { auth } from "@/lib/server/auth-admin";
 import { getAdminNewsletters } from "@/lib/domains/newsletters";
 import { getBlacklistSource, getUserSubscriptionsAdmin } from "@/lib/domains/subscriptions";
-import { getEmailEventHistory } from "@/lib/integrations/bigquery";
 import { BlacklistToggle } from "./BlacklistToggle";
 
 // Port of AdminController::newsletterAdminAction — all newsletters + this
 // admin's own subscription state (cache/DB three-way merge) + blacklist
-// status, plus an optional BigQuery event-history panel behind ?events=1.
-export default async function AdminDashboardPage(props: PageProps<"/admin">) {
+// status. Per-user ActiveCampaign event history lives on /admin/users
+// instead (see users/page.tsx) — that's where an admin is actually looking at
+// a specific person's activity, not their own.
+export default async function AdminDashboardPage() {
   const session = await auth();
   const email = session!.user!.email!;
-  const searchParams = await props.searchParams;
-  const showEvents = searchParams.events === "1";
 
-  const [newsletters, subscriptions, blacklistSource, events] = await Promise.all([
+  const [newsletters, subscriptions, blacklistSource] = await Promise.all([
     getAdminNewsletters(),
     getUserSubscriptionsAdmin(email),
     getBlacklistSource(email),
-    showEvents ? getEmailEventHistory(email) : Promise.resolve(null),
   ]);
 
   const subscriptionById = new Map(subscriptions.map((row) => [row.id, row]));
@@ -31,12 +28,6 @@ export default async function AdminDashboardPage(props: PageProps<"/admin">) {
       <BlacklistToggle blacklistSource={blacklistSource} />
 
       <div className="section">
-        <div className="page-nav">
-          <Link href={showEvents ? "/admin" : "/admin?events=1"}>
-            {showEvents ? "Skjul events" : "Vis events"}
-          </Link>
-        </div>
-
         <h2>Nyhedsbreve</h2>
         <ul>
           {newsletters.map((newsletter) => {
@@ -60,48 +51,6 @@ export default async function AdminDashboardPage(props: PageProps<"/admin">) {
           })}
         </ul>
       </div>
-
-      {events && (
-        <div className="section">
-          <h2>Events</h2>
-          <div className="table-wrap">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Dato</th>
-                  <th>Liste</th>
-                  <th>Kampagne</th>
-                  <th>Event</th>
-                </tr>
-              </thead>
-              <tbody>
-                {events.map((event, index) => (
-                  <tr key={index}>
-                    <td>{event.timestamp}</td>
-                    <td>{String(event.list ?? "")}</td>
-                    <td>
-                      {event.url ? (
-                        <a href={event.url} target="_blank" rel="noreferrer">
-                          {String(event.campaignName ?? "")}
-                        </a>
-                      ) : (
-                        String(event.campaignName ?? "—")
-                      )}
-                    </td>
-                    <td>
-                      <span
-                        className={`badge ${event.eventType === "opened" ? "badge--positive" : ""}`}
-                      >
-                        {event.eventType}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
     </main>
   );
 }

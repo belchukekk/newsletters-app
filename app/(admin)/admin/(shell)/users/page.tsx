@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { getAdminNewsletters } from "@/lib/domains/newsletters";
 import { getUserSubscriptionsAdmin } from "@/lib/domains/subscriptions";
 import { getCustomerByEmail } from "@/lib/domains/customer";
+import { getEmailEventHistory } from "@/lib/integrations/activecampaign";
 import { AdminUserToggleList } from "./AdminUserToggleList";
 
 function firstParam(value: string | string[] | undefined): string | undefined {
@@ -13,6 +15,7 @@ function firstParam(value: string | string[] | undefined): string | undefined {
 export default async function AdminUsersPage(props: PageProps<"/admin/users">) {
   const searchParams = await props.searchParams;
   const email = firstParam(searchParams.email)?.trim();
+  const showEvents = searchParams.events === "1";
 
   return (
     <main className="page">
@@ -41,16 +44,17 @@ export default async function AdminUsersPage(props: PageProps<"/admin/users">) {
         </button>
       </form>
 
-      {email && <UserSubscriptions email={email} />}
+      {email && <UserSubscriptions email={email} showEvents={showEvents} />}
     </main>
   );
 }
 
-async function UserSubscriptions({ email }: { email: string }) {
-  const [newsletters, subscriptionRows, customer] = await Promise.all([
+async function UserSubscriptions({ email, showEvents }: { email: string; showEvents: boolean }) {
+  const [newsletters, subscriptionRows, customer, events] = await Promise.all([
     getAdminNewsletters(),
     getUserSubscriptionsAdmin(email),
     getCustomerByEmail(email),
+    showEvents ? getEmailEventHistory(email) : Promise.resolve(null),
   ]);
 
   const rowById = new Map(subscriptionRows.map((row) => [row.id, row]));
@@ -69,6 +73,7 @@ async function UserSubscriptions({ email }: { email: string }) {
   );
 
   const fullName = [customer?.firstName, customer?.lastName].filter(Boolean).join(" ");
+  const eventsHref = `/admin/users?email=${encodeURIComponent(email)}${showEvents ? "" : "&events=1"}`;
 
   return (
     <div className="section">
@@ -84,6 +89,39 @@ async function UserSubscriptions({ email }: { email: string }) {
         </p>
       )}
       <AdminUserToggleList email={email} newsletters={newsletters} initialRows={initialRows} />
+
+      <div className="page-nav">
+        <Link href={eventsHref}>{showEvents ? "Skjul events" : "Vis events"}</Link>
+      </div>
+
+      {events && (
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Dato</th>
+                <th>Reference</th>
+                <th>Event</th>
+              </tr>
+            </thead>
+            <tbody>
+              {events.map((event, index) => (
+                <tr key={index}>
+                  <td>{event.timestamp}</td>
+                  <td>{event.referenceType}</td>
+                  <td>
+                    <span
+                      className={`badge ${event.eventType.toLowerCase().includes("open") ? "badge--positive" : ""}`}
+                    >
+                      {event.eventType}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

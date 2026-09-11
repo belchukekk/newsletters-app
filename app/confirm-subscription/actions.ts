@@ -10,7 +10,10 @@ export type ConfirmResult = { ok: true; newsletterTitle?: string } | { ok: false
 // separated from the actual client-triggered confirm so a plain crawler GET
 // on the link never triggers the side effect (the client component below
 // calls this only after mounting/executing JS, matching the old app's
-// anti-prefetch auto-submit form).
+// anti-prefetch auto-submit form). No email is sent from here: the opt-in
+// follow-up template is a resend of the original ask for recipients who
+// haven't confirmed yet (see lib/integrations/mandrill.ts's
+// sendOptInFollowUpEmail), not something triggered by a successful confirm.
 export async function confirmSubscriptionAction(
   id: string,
   chk: string

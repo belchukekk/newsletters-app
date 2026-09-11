@@ -138,7 +138,8 @@ export async function handlePermission(
 
   if (!authenticated && subscribe) {
     // The unauthenticated /save flow needs the logged event's own _id to
-    // build the confirm-subscription link and to later update the same doc.
+    // build the opt-in email's confirm link (see
+    // lib/domains/optin.ts's buildOptInConfirmUrl).
     try {
       const parsed = JSON.parse(responseText);
       const permissionId = parsed?.isLogged?.id;
@@ -149,28 +150,6 @@ export async function handlePermission(
   }
 
   return { ok: true };
-}
-
-// Port of the second BBL log in Controller::newsletterLogDataAction (/save) —
-// updates the same event doc created by handlePermission() with optin_sent,
-// once the opt-in email has actually been sent via Notifier.
-export async function markOptInSent(
-  permissionId: string,
-  email: string,
-  newsletterId: string
-): Promise<void> {
-  await logToBbl(
-    {
-      event: "permission",
-      mail: email,
-      origin: "newsletter",
-      source: requireEnv("BBL_SOURCE"),
-      lists: [newsletterId, "marketing"],
-      optin_sent: Math.floor(Date.now() / 1000),
-    },
-    "https://nyhedsbreve.kristeligt-dagblad.dk",
-    `bigbucket/${permissionId}`
-  );
 }
 
 // "pause" is a special reason value: it additionally logs a future-dated

@@ -1,0 +1,128 @@
+<!--
+  Starter template for MANDRILL_TEMPLATE_OPTIN (see lib/integrations/mandrill.ts).
+  Paste into a new Mandrill template (Mailchimp Transactional > Templates),
+  name it to match the MANDRILL_TEMPLATE_OPTIN env var. Copy/layout modeled
+  directly on the current production opt-in email — adjust freely.
+
+  Merge tags used (Mandrill's default "mailchimp" tag style, *|TAG|*):
+    *|OPTIN_URL|*          - the confirm-subscription link (required)
+    *|UNSUBSCRIBE_URL|*    - one-click unsubscribe link for the FAQ section
+    *|NEWSLETTER_TITLE|*   - e.g. "Ugens Kommentar"
+    *|NEWSLETTER_FREQUENCY|* - e.g. "hver morgen i hverdage samt lørdag formiddag"
+    *|WEBSITE|*            - static site label, currently "kristeligt-dagblad.dk"
+    *|USER_EMAIL|*         - the recipient's own address
+    *|CURRENT_YEAR|*       - footer copyright year
+-->
+<!doctype html>
+<html lang="da">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bekræft din tilmelding</title>
+  </head>
+  <body style="margin:0; padding:0; background-color:#eee; font-family:Helvetica, Arial, sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#eee; padding:32px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px; width:100%; background-color:#ffffff; border-radius:4px; overflow:hidden;">
+
+            <!-- Wordmark -->
+            <tr>
+              <td align="center" style="background-color:#2c5a91; padding:28px 32px;">
+                <span style="font-family:Georgia, serif; font-size:24px; font-weight:bold; color:#ffffff;">
+                  Kristeligt Dagblad
+                </span>
+              </td>
+            </tr>
+
+            <!-- Body -->
+            <tr>
+              <td align="center" style="padding:40px 32px 8px;">
+                <p style="margin:0 0 32px; font-size:16px; line-height:1.6; color:#232323; text-align:center;">
+                  Du er ved at tilmelde dig nyhedsbrevet <strong>*|NEWSLETTER_TITLE|*</strong> fra
+                  <strong>*|WEBSITE|*</strong>. Bekræft din tilmelding her:
+                  <a href="*|OPTIN_URL|*" style="color:#2c5a91;"><strong>klik her</strong></a>
+                </p>
+              </td>
+            </tr>
+
+            <!-- CTA -->
+            <tr>
+              <td align="center" style="padding:0 32px 32px;">
+                <table role="presentation" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td align="center" style="border-radius:4px; background-color:#2c5a91;">
+                      <a href="*|OPTIN_URL|*"
+                         style="display:inline-block; padding:14px 32px; font-size:16px; font-weight:bold; color:#ffffff; text-decoration:none;">
+                        Bekræft tilmelding
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Recipient -->
+            <tr>
+              <td align="center" style="padding:0 32px 40px;">
+                <p style="margin:0; font-size:14px; line-height:1.6; color:#666; text-align:center;">
+                  Tilmeldingen gælder for e-mail-adressen:<br />
+                  <strong style="color:#232323;">*|USER_EMAIL|*</strong>
+                </p>
+              </td>
+            </tr>
+
+            <tr><td style="border-top:1px solid #eee;"></td></tr>
+
+            <!-- FAQ -->
+            <tr>
+              <td style="padding:32px 32px 8px;">
+                <h2 style="margin:0 0 24px; font-family:Georgia, serif; font-size:22px; color:#2c5a91; text-align:center;">
+                  Spørgsmål og svar
+                </h2>
+
+                <p style="margin:0 0 4px; font-size:15px; font-weight:bold; color:#232323;">
+                  Hvor ofte vil jeg modtage dette nyhedsbrev?
+                </p>
+                <p style="margin:0 0 20px; font-size:15px; line-height:1.6; color:#232323;">
+                  Du vil modtage nyhedsbrevet *|NEWSLETTER_FREQUENCY|*.
+                </p>
+
+                <p style="margin:0 0 4px; font-size:15px; font-weight:bold; color:#232323;">
+                  Hvordan afmelder jeg mig denne tjeneste?
+                </p>
+                <p style="margin:0; font-size:15px; line-height:1.6; color:#232323;">
+                  Ønsker du ikke at modtage nyhedsbrevet,
+                  <a href="*|UNSUBSCRIBE_URL|*" style="color:#2c5a91; font-weight:bold;">så klik her</a>.
+                  Skulle du fortryde tilmeldingen, kan du nemt afmelde dig tjenesten senere.
+                </p>
+              </td>
+            </tr>
+
+            <tr><td style="border-top:1px solid #eee;"></td></tr>
+
+            <!-- Footer -->
+            <tr>
+              <td align="center" style="padding:32px;">
+                <p style="margin:0 0 8px; font-size:13px; line-height:1.6; color:#666;">
+                  Vimmelskaftet 47, 1161 København K<br />
+                  Abonnement: 33 48 05 05
+                </p>
+                <p style="margin:0 0 12px; font-size:13px; color:#666;">
+                  *|CURRENT_YEAR|* Kristeligt Dagblad
+                </p>
+                <p style="margin:0; font-size:13px; color:#666;">
+                  Læs mere om
+                  <a href="https://www.kristeligt-dagblad.dk/ophavsret" style="color:#2c5a91;">ophavsret</a>
+                  og
+                  <a href="https://www.kristeligt-dagblad.dk/persondatapolitik" style="color:#2c5a91;">persondatapolitik</a>
+                </p>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

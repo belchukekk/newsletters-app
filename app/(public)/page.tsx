@@ -64,6 +64,11 @@ export default async function HomePage(props: PageProps<"/">) {
 
   return (
     <main className="page">
+      {session?.email && (
+        <p className="page-intro">
+          Du er logget ind som <strong>{session.email}</strong>.
+        </p>
+      )}
       <Render config={config} data={resolved} />
     </main>
   );

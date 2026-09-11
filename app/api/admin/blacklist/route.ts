@@ -3,7 +3,8 @@ import { auth } from "@/lib/server/auth-admin";
 import { logBlacklistEvent, setBlacklistCache } from "@/lib/domains/subscriptions";
 
 // Port of AdminController::blacklistLogAction (/save-blacklist) — toggles
-// the admin's own email (see the session-model note in gdpr/page.tsx).
+// the admin's own email (the NextAuth session's own email stands in for the
+// old app's dual sessionEmail/sessionAdminEmail, which no longer exists).
 export async function POST(request: Request) {
   const session = await auth();
   const email = session?.user?.email;

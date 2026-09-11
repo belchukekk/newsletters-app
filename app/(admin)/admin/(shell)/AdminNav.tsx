@@ -8,7 +8,6 @@ const LINKS = [
   { href: "/admin/homepage", label: "Forside" },
   { href: "/admin/newsletters", label: "Nyhedsbrevskatalog" },
   { href: "/admin/users", label: "Brugere" },
-  // { href: "/admin/gdpr", label: "GDPR" },
 ];
 
 export function AdminNav() {

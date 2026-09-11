@@ -26,6 +26,14 @@ export function verifyUnsubscribeToken(email: string, auth: string): boolean {
   return md5(`${email}${salt}`) === auth;
 }
 
+// The generate-side counterpart to verifyUnsubscribeToken, used to build the
+// one-click unsubscribe link sent in opt-in/newsletter emails.
+export function buildUnsubscribeToken(email: string): string {
+  const salt = process.env.NL_AC_UNSUB_SALT;
+  if (!salt) throw new Error("Missing required env var: NL_AC_UNSUB_SALT");
+  return md5(`${email}${salt}`);
+}
+
 // Port of OptInService::confirmSubscription's checksum: chk = md5(id+mail),
 // validated against the pending BBL event's own _id/mail fields — not the
 // raw request params directly (the route handler fetches the event first).
@@ -35,4 +43,10 @@ export function verifyConfirmSubscriptionChecksum(
   chk: string
 ): boolean {
   return md5(`${eventId}${mail}`) === chk;
+}
+
+// The generate-side counterpart to verifyConfirmSubscriptionChecksum, used
+// to build the opt-in confirmation link sent in the opt-in email.
+export function buildConfirmSubscriptionChecksum(eventId: string, mail: string): string {
+  return md5(`${eventId}${mail}`);
 }

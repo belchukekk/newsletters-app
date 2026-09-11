@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPublishedNewsletters } from "@/lib/domains/newsletters";
-import { handlePermission, markOptInSent } from "@/lib/domains/subscriptions";
-import { getOptInEmailHtml } from "@/lib/integrations/mailchimp";
-import { sendOptInEmail } from "@/lib/integrations/notifier";
+import { handlePermission } from "@/lib/domains/subscriptions";
+import { buildNewsletterUnsubscribeUrl, buildOptInConfirmUrl } from "@/lib/domains/optin";
+import { sendOptInEmail } from "@/lib/integrations/mandrill";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Port of Controller::newsletterLogDataAction (/save) — public opt-in form
 // POST (the /subscribe anonymous form posts here). Logs a "permission" BBL
-// event, fetches the opt-in template from Mailchimp, sends it via Notifier,
-// then marks the same event optin_sent on success. No BBL log on Notifier
-// failure — matches the old app exactly.
+// event, then sends the opt-in confirmation email via Mandrill (a named
+// transactional template, not a fetched Mailchimp campaign — see
+// lib/integrations/mandrill.ts). A send failure doesn't fail the request:
+// the BBL event is the durable record of the subscribe attempt either way.
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
   const email = String(formData.get("email") ?? "").trim();
@@ -34,34 +35,19 @@ export async function POST(request: NextRequest) {
     subscribe: true,
   });
 
-  if (!permissionResult.ok || !permissionResult.permissionId) {
-    return NextResponse.redirect(new URL("/", request.url));
+  if (permissionResult.ok && permissionResult.permissionId) {
+    try {
+      await sendOptInEmail({
+        email,
+        confirmUrl: buildOptInConfirmUrl(permissionResult.permissionId, email),
+        unsubscribeUrl: buildNewsletterUnsubscribeUrl(email, newsletterId),
+        newsletterTitle: newsletter.title,
+        newsletterFrequency: newsletter.frequency,
+      });
+    } catch (error) {
+      console.error("Failed to send opt-in email via Mandrill", error);
+    }
   }
-
-  let html: string;
-  try {
-    html = await getOptInEmailHtml({
-      mail: email,
-      permissionId: permissionResult.permissionId,
-      newsletterTitle: newsletter.title,
-      newsletterFrequency: newsletter.frequency,
-    });
-  } catch {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
-
-  const sent = await sendOptInEmail({
-    email,
-    html,
-    subject: newsletter.title,
-    source: "optin",
-  });
-
-  if (!sent) {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
-
-  await markOptInSent(permissionResult.permissionId, email, newsletterId);
 
   return NextResponse.redirect(new URL("/", request.url));
 }

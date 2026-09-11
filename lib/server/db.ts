@@ -11,8 +11,8 @@ import {
 // of a raw host:port TCP connection. Locally, set GOOGLE_APPLICATION_CREDENTIALS
 // to a service account key file path (the connector's default ADC lookup
 // picks it up); on Vercel there's no persistent filesystem for that, so set
-// GOOGLE_CLOUD_CREDENTIALS_JSON to the same key's JSON content instead — the
-// same env var the BigQuery client uses, see .env.example.
+// GOOGLE_CLOUD_CREDENTIALS_JSON to the same key's JSON content instead, see
+// .env.example.
 const connector = new Connector(
   process.env.GOOGLE_CLOUD_CREDENTIALS_JSON
     ? {

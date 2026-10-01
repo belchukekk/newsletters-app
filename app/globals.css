@@ -446,6 +446,7 @@ legend {
   margin-bottom: var(--su-xs);
 }
 .newsletter-card__description {
+  white-space: pre-line;
   font-size: 0.9375rem;
   color: var(--color-text-secondary);
   margin-bottom: var(--su-s);
@@ -511,6 +512,7 @@ legend {
   }
 }
 .promo-feature__tagline {
+  white-space: pre-line;
   font-size: 1.0625rem;
   color: var(--color-text-primary);
   margin-bottom: var(--su-m);
@@ -611,6 +613,7 @@ legend {
   margin-bottom: 2px;
 }
 .toggle-row__description {
+  white-space: pre-line;
   font-size: 0.875rem;
   color: var(--color-text-secondary);
   margin-bottom: 0;
